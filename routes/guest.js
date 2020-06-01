@@ -17,13 +17,13 @@ router.post("/login", async (req, res, next) => {
           `SELECT * FROM users WHERE username = '${req.body.username}'`
         )
       )[0];
- 
+
       if (!bcrypt.compareSync(req.body.password, user.password)) {
         throw { status: 401, message: "Username or Password incorrect" };
       }
   
       // Set cookie
-      req.session.username = user.username;
+      req.session.username = user.user_id;
       // req.session.save();
       // res.cookie(session_options.cookieName, user.user_id, cookies_options);
   

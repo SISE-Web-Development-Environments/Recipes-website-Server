@@ -1,4 +1,5 @@
 CREATE TABLE [dbo].[users](
+	[user_id] [int] NOT NULL UNIQUE,
 	[username] [varchar](30) NOT NULL UNIQUE,
 	[password][varchar](300) NOT NULL,
 	[firstName] [varchar](300) NOT NULL,
