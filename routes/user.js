@@ -5,7 +5,12 @@ var express = require("express");
 var router= express.Router();
 
 
-router.get("/test",(req,res,next)=>{
-    console.log("testt!!!");
-});
+router.use(function requireLogin(req, res, next) {
+    if (!req.user_id) {
+      next({ status: 401, message: "unauthorized" });
+    } else {
+      next();
+    }
+  });
+  
 module.exports=router;
