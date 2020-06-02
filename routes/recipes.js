@@ -1,60 +1,145 @@
 var express = require("express");
-var router= express.Router();
 const axios = require("axios");
-
+var router = express.Router();
 const api_domain = "https://api.spoonacular.com/recipes";
 
 //get recipe information by recipe id 
-router.get("/information/:recipeID",async (req,res,next)=>{
-    let recipe_id=req.params.recipeID;
+router.get("/information/:recipeID", async (req, res, next) => {
+    let recipe_id = req.params.recipeID;
     console.log(recipe_id);
+    try {
+        let infoResponse = await axios.get(`${api_domain}/${recipe_id}/information`, {
+            params: {
+                includeNutrition: false,
+                apiKey: process.env.spooncular_apiKey
+            }
+        });
 
-    try{
-    let ans = await axios.get(`${api_domain}/${recipe_id}/information`, {
-        params: {
-          includeNutrition: false,
-          apiKey: process.env.spooncular_apiKey
-        }
-      });
-      res.send({ data: ans.data });
-    }catch(error){
+        //extract relevant informaiton
+        let relevantInfoResponse = getRelevantRecipeDateInformation(infoResponse);
+        res.status(200).send(relevantInfoResponse);
+    } catch (error) {
         next(error);
     }
-});
+})
+
+
 //get 3 random recpies 
-router.get("/randomRecipes",async (req,res,next)=> {
-    try{
+router.get("/randomRecipes", async (req, res, next) => {
+    try {
         let ans = await axios.get(`${api_domain}/random`, {
             params: {
                 limitLicense: true,
                 number: 3,
                 apiKey: process.env.spooncular_apiKey
-              }
+            }
         });
         res.send(ans.data);
-      } catch(error){
-          next(error);
-      }
-});
+    } catch (error) {
+        next(error);
+    }
+})
 
-router.get("/search/query=:searchQuery&number=:num&cuisine=:cuisine&intolerances=:intolerances&diet=:diet", async (req,res,next)=>{
-    try{
-        console.log(req.params);
+//get showing inforamation for search recipes
+router.get("/search", async (req, res, next) => {
+    try {
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
-                query: req.params.query,
-                number: req.params.number,
-                cuisine: null,
-                intolerances:null,
-                diet:req.params.diet,
+                query: req.query.query,
+                number: req.query.number,
+                cuisine: req.query.cuisine,
+                intolerances: req.query.intolerances,
+                diet: req.query.diet,
                 apiKey: process.env.spooncular_apiKey
-              }
+            }
         });
-        res.send(ans.data);
-      } catch(error){
-          next(error);
-      }
+        let data = getArrayRecipeID(ans.data);
+        let urlList = [];
+        data.map((recipeID) => urlList.push(`${api_domain}/${recipeID}/information?apiKey=${process.env.spooncular_apiKey}`));
+
+        let infoResponse = await promiseAll(axios.get, urlList);
+        let relevantInfoResponse = getRelevantRecipeDateShow(infoResponse);
+
+        res.status(200).send(relevantInfoResponse);
+    } catch (error) {
+        next(error);
+    }
 })
 
-module.exports=router;
+
+
+//waiting for all promises return
+async function promiseAll(func, urlList) {
+    let promises = [];
+    urlList.map((url) => promises.push(axios.get(url)));
+    let info = await Promise.all(promises);
+    return info;
+}
+
+//extract relevant recipe data from api response for show
+function getRelevantRecipeDateShow(infoList) {
+    return infoList.map((info) => {
+        const {
+            id,
+            image,
+            title,
+            readyInMinutes,
+            aggregateLikes,
+            vegetarian,
+            vegan,
+            glutenFree,
+        } = info.data;
+
+        return {
+            recipeID: id,
+            imageURL: image,
+            name: title,
+            cookingDuration: readyInMinutes,
+            likes: aggregateLikes,
+            isVegeterian: vegetarian,
+            isVegan: vegan,
+            isGluten: glutenFree
+        }
+    });
+}
+
+//extract relevant recipe data from api response for get information
+function getRelevantRecipeDateInformation(info) {
+    const {
+        id,
+        image,
+        title,
+        readyInMinutes,
+        aggregateLikes,
+        vegetarian,
+        vegan,
+        glutenFree,
+        extendedIngredients,
+        instructions,
+        servings
+    } = info.data;
+
+    return {
+        recipeID: id,
+        imageURL: image,
+        name: title,
+        cookingDuration: readyInMinutes,
+        likes: aggregateLikes,
+        isVegeterian: vegetarian,
+        isVegan: vegan,
+        isGluten: glutenFree,
+        ingredients: extendedIngredients,
+        cookingInstruction: instructions,
+        dishesNumber: servings
+    }
+}
+
+//get array of all recipes that return from search api
+function getArrayRecipeID(data) {
+    let recipeIDs = [];
+    data.results.map((recipe) => { recipeIDs.push(recipe.id); });
+    return recipeIDs;
+}
+module.exports = router;
+

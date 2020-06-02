@@ -22,7 +22,6 @@ app.use(
     //the session will be extended by activeDuration milliseconds
   })
 );
-
 app.use("/user", user);
 app.use("/guest", guest);
 app.use("/recipes", recipes);

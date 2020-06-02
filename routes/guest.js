@@ -23,10 +23,7 @@ router.post("/login", async (req, res, next) => {
       }
   
       // Set cookie
-      req.session.ueser_id = user.user_id;
-      // req.session.save();
-      // res.cookie(session_options.cookieName, user.user_id, cookies_options);
-  
+      req.session.user_id = user.user_id;
       // return cookie
       res.status(200).send({ message: "login successed", success: true });
     } catch (error) {
@@ -51,7 +48,7 @@ router.post("/register", async (req,res,next) => {
 
           await DButils.execQuery(
               `INSERT INTO users (username,password,firstName,lastName,country,email)
-              VALUES('${req.body.username}','${hash_password}','${req.body.firstName}','${req.body.lastName}','${req.body.country}','${req.body.email}')`
+              VALUES('${req.body.username}','${hash_password}','${req.body.first_name}','${req.body.last_name}','${req.body.country}','${req.body.email}')`
           )
           res.status(201).send({ message: "register successed", success: true });
       }
