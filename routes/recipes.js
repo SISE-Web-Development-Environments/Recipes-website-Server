@@ -7,6 +7,8 @@ const api_domain = "https://api.spoonacular.com/recipes";
 //get recipe information by recipe id 
 router.get("/information/:recipeID",async (req,res,next)=>{
     let recipe_id=req.params.recipeID;
+    console.log(recipe_id);
+
     try{
     let ans = await axios.get(`${api_domain}/${recipe_id}/information`, {
         params: {
@@ -14,7 +16,7 @@ router.get("/information/:recipeID",async (req,res,next)=>{
           apiKey: process.env.spooncular_apiKey
         }
       });
-      res.send({ data: ans.data.vegetarian });
+      res.send({ data: ans.data });
     }catch(error){
         next(error);
     }
@@ -35,18 +37,17 @@ router.get("/randomRecipes",async (req,res,next)=> {
       }
 });
 
-router.get("/search", async (req,res,next)=>{
+router.get("/search/query=:searchQuery&number=:num&cuisine=:cuisine&intolerances=:intolerances&diet=:diet", async (req,res,next)=>{
     try{
         console.log(req.params);
-        const { query,number, cuisine, intolerances, diet } = req.body;
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
-                query: query,
-                number: number,
-                cuisine: cuisine,
-                intolerances:intolerances,
-                diet:diet,
+                query: req.params.query,
+                number: req.params.number,
+                cuisine: null,
+                intolerances:null,
+                diet:req.params.diet,
                 apiKey: process.env.spooncular_apiKey
               }
         });
