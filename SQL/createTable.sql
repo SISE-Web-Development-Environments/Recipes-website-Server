@@ -1,4 +1,14 @@
-
+CREATE TABLE [dbo].[users](
+	[user_id] [int] NOT NULL UNIQUE,
+	[username] [varchar](30) NOT NULL UNIQUE,
+	[password][varchar](300) NOT NULL,
+	[first_name] [varchar](300) NOT NULL,
+	[last_name] [varchar](300) NOT NULL,
+	[country] [varchar](300) NOT NULL,
+	[email] [varchar](300) NOT NULL,
+	[profile_image] [varchar](300)
+	PRIMARY KEY(user_id)
+)
 GO
 CREATE TABLE [dbo].[favorite_recipes](
 	[user_id] [int] NOT NULL,
