@@ -17,7 +17,7 @@ router.use(function requireLogin(req, res, next) {
   //post my family recipes
 router.post('/myFamilyRecipes', async (req, res,next) => {
   try{
-    if(req.body){
+    if(req.body && validParameter(req.body)){
       let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
       let ans =await DButils.execQuery(
         `INSERT INTO family_recipes (user_id,recipe_name,owner,duration,recipe_event,ingredients_and_quantity,instruction,dishes)
@@ -51,11 +51,11 @@ router.get("/myFamilyRecipes",async (req,res,next)=>{
 //post my recipes
   router.post("/myRecipes",async (req,res,next)=>{
       try{
-      if(req.body){
+      if(req.body && !validParameter(req.bo)){
         let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
         await DButils.execQuery(
-            `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,likes,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
-            VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.duration}','${booleanToString(req.body.vegan)}','0','${booleanToString(req.body.gluten)}','${booleanToString(req.body.vegetarian)}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
+            `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
+            VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.duration}','${booleanToString(req.body.vegan)}','${booleanToString(req.body.gluten)}','${booleanToString(req.body.vegetarian)}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
         )          
         res.status(200).send({ message: "post recipe successed", success: true });
       }else{
@@ -97,7 +97,8 @@ function ingredientsArrToClient(array){
     obj.ingredients_and_quantity.map((el,index)=>{
       var keys = Object.keys( el );
       var values = Object.values( el );
-        arr.push({name:keys[0],quantity:values[0]});
+      var units=values[0].split(" ");
+        arr.push({name:keys[0],quantity:units[0],unit:units[1]});
     })
     obj.ingredients_and_quantity=arr;
   })
@@ -105,8 +106,68 @@ function ingredientsArrToClient(array){
 //parse ingredient to db tables
 function ingredientsArrToDB(request){
   let arr=[];
-  request.body.ingredients_and_quantity.forEach(element => {arr.push({[element.name]:element.quantity});});
+  request.body.ingredients_and_quantity.forEach(element => {arr.push({[element.name]:element.quantity+" "+ element.unit});});
   return arr;
+}
+function validParameter(body){
+  var keys = Object.keys( body );
+  keys.map((obj)=>{
+    switch(obj) {
+      case "recipe_name":
+        if(typeof body.recipe_name !=='string'){
+          return false;
+        }
+        break;
+      case "duration":
+        if(typeof body.duration !=='number'){
+          return false;
+        }
+        break;
+      case "vegan":
+          if(typeof body.vegan !=='string' || body.vegan!='true' || body.vegan!='false' ){
+            return false;
+          }
+          break;
+      case "gluten":
+        if(typeof body.gluten !=='string' || body.gluten!='true' || body.gluten!='false' ){
+          return false;
+        }
+        break;
+      case "ingredients_and_quantity":
+        if(typeof body.ingredients_and_quantity !=='object' || body.ingredients_and_quantity.size<1){
+          return false;
+        }
+        break;
+      case "instruction":
+        if(typeof body.instruction !=='string'){
+          return false;
+        }
+        break;
+      case "dishes":
+        if(typeof body.dishes !=='number'){
+          return false;
+        }
+        break;  
+      case "vegetarian":
+        if(typeof body.vegetarian !=='string' || body.vegetarian!='true' || body.vegetarian!='false' ){
+          return false;
+        }
+        break;  
+      case "owner":
+        if(typeof body.owner !=='string'){
+          return false;
+        }
+        break;
+      case "recipe_event":
+        if(typeof body.recipe_event !=='string'){
+          return false;
+        }
+        break;
+        default:
+          return false;
+    }
+  });
+  return true;
 }
 //logout and clear session
 router.post("/Logout", function (req, res) {

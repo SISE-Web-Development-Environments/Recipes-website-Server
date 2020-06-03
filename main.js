@@ -36,6 +36,7 @@ app.use(function (req, res, next) {
     next();
   }
 });
+app.use("/recipes",recipes.router);
 app.use("/user", user);
 app.use("/guest", guest);
 
