@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[favorite_recipes](
 	[recipe_id][int] NOT NULL
 )
 GO
-CREATE TABLE [dbo].[watch_reipes](
+CREATE TABLE [dbo].[watch_recipes](
 	[user_id] [int] NOT NULL,
 	[recipe_id][int]NOT NULL,
 	[index_watch_id] [int]NOT NULL IDENTITY(1,1) UNIQUE

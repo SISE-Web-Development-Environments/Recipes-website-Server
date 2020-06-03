@@ -22,9 +22,10 @@ app.use(
     //the session will be extended by activeDuration milliseconds
   })
 );
+app.use("/recipes", recipes.router);
 app.use("/user", user);
 app.use("/guest", guest);
-app.use("/recipes", recipes);
+
 
 var port = process.env.PORT || "3000";
 const server = app.listen(port, () => {
