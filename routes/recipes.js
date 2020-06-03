@@ -131,6 +131,15 @@ function getRelevantRecipeDateInformation(info) {
         instructions,
         servings
     } = info.data;
+    var Ingredients=[];
+
+    extendedIngredients.map((ing)=>{
+        let obj={};
+        obj.name= ing.name;
+        obj.qauntity= ing.amount;
+        obj.unit=ing.unit;
+        Ingredients.push(obj);
+    })
 
     return {
         recipeID: id,
@@ -141,7 +150,7 @@ function getRelevantRecipeDateInformation(info) {
         isVegeterian: vegetarian,
         isVegan: vegan,
         isGluten: glutenFree,
-        ingredients: extendedIngredients,
+        ingredients: Ingredients,
         cookingInstruction: instructions,
         dishesNumber: servings
     }
