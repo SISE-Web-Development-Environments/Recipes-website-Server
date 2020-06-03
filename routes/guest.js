@@ -47,8 +47,8 @@ router.post("/register", async (req,res,next) => {
           );
 
           await DButils.execQuery(
-              `INSERT INTO users (username,password,firstName,lastName,country,email)
-              VALUES('${req.body.username}','${hash_password}','${req.body.first_name}','${req.body.last_name}','${req.body.country}','${req.body.email}')`
+              `INSERT INTO users (username,password,first_name,last_name,country,email)
+              VALUES('${req.body.username}','${hash_password}','${req.body.firstName}','${req.body.lastName}','${req.body.country}','${req.body.email}')`
           )
           res.status(201).send({ message: "register successed", success: true });
       }
