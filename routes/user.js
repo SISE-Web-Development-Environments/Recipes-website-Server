@@ -16,7 +16,7 @@ router.use(function requireLogin(req, res, next) {
 
 //get favirite recipe foe user id
 router.get("/myFavoriteRecipes", async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   try {
     let favorites = await DButils.execQuery(
       `SELECT recipe_id FROM favorite_recipes WHERE user_id= '${userID}'`
@@ -40,7 +40,7 @@ router.get("/myFavoriteRecipes", async (req, res, next) => {
 
 //add recipe to user favorite recipes list
 router.post('/myFavoriteRecipes', async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   let recipeID = req.body.recipeID;
 
   try {
@@ -60,7 +60,7 @@ router.post('/myFavoriteRecipes', async (req, res, next) => {
 });
 
 router.get("/lastViewRecipes", async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   try {
     let recipesIDList = await DButils.execQuery(
       `select top(3) recipe_id
@@ -87,7 +87,7 @@ router.get("/lastViewRecipes", async (req, res, next) => {
 })
 
 router.post('/addToMyWatch', async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   let recipeID = req.body.recipeID;
   try {
     await DButils.execQuery(//delete if recipe id already exist with user id
