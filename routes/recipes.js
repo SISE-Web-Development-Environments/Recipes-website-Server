@@ -34,7 +34,11 @@ router.get("/randomRecipes", async (req, res, next) => {
                 apiKey: process.env.spooncular_apiKey
             }
         });
-        res.send(ans.data);
+
+        //extract relevant informaiton for client
+        let relevantInfoResponse = getRelevantRecipeDateShow(ans.data.recipes);
+        //sending response
+        res.status(200).send(relevantInfoResponse);
     } catch (error) {
         next(error);
     }
@@ -43,6 +47,9 @@ router.get("/randomRecipes", async (req, res, next) => {
 //get showing inforamation for search recipes
 router.get("/search", async (req, res, next) => {
     try {
+        if(!req.query.number){
+            req.query.number=5;
+        }
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
@@ -54,19 +61,24 @@ router.get("/search", async (req, res, next) => {
                 apiKey: process.env.spooncular_apiKey
             }
         });
+        //create array recipes id
         let data = getArrayRecipeID(ans.data);
         let urlList = [];
+        //create url for all recipe id
         data.map((recipeID) => urlList.push(`${api_domain}/${recipeID}/information?apiKey=${process.env.spooncular_apiKey}`));
-
+        //sending request to external api
         let infoResponse = await promiseAll(axios.get, urlList);
-        let relevantInfoResponse = getRelevantRecipeDateShow(infoResponse);
-
+        //extract data to array
+        let infoResponseData=[];
+        infoResponse.map((info)=> infoResponseData.push(info.data));
+        //extract relevant informaiton for client
+        let relevantInfoResponse = getRelevantRecipeDateShow(infoResponseData);
+        //sending response
         res.status(200).send(relevantInfoResponse);
     } catch (error) {
         next(error);
     }
 })
-
 
 
 //waiting for all promises return
@@ -89,7 +101,7 @@ function getRelevantRecipeDateShow(infoList) {
             vegetarian,
             vegan,
             glutenFree,
-        } = info.data;
+        } = info;
 
         return {
             recipeID: id,
@@ -141,5 +153,11 @@ function getArrayRecipeID(data) {
     data.results.map((recipe) => { recipeIDs.push(recipe.id); });
     return recipeIDs;
 }
-module.exports = router;
-
+module.exports = { 
+    router:router,
+    promiseAll:promiseAll,
+    getRelevantRecipeDateShow:getRelevantRecipeDateShow,
+    getRelevantRecipeDateInformation:getRelevantRecipeDateInformation,
+    getArrayRecipeID:getArrayRecipeID
+  }
+// module.exports = router,promiseAll,getRelevantRecipeDateShow, getRelevantRecipeDateInformation, getArrayRecipeID ;

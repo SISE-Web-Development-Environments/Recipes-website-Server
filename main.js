@@ -38,7 +38,7 @@ app.use(function (req, res, next) {
 });
 app.use("/user", user);
 app.use("/guest", guest);
-app.use("/recipes", recipes);
+
 
 var port = process.env.PORT || "3000";
 const server = app.listen(port, () => {

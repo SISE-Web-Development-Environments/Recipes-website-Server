@@ -2,8 +2,9 @@ var express = require("express");
 const DButils = require("../SQL/DButils");
 const axios = require("axios");
 var express = require("express");
+var recipes = require('./recipes.js');
 const api_domain = "https://api.spoonacular.com/recipes";
-var router= express.Router();
+var router = express.Router();
 
 //login check in
 router.use(function requireLogin(req, res, next) {
@@ -17,8 +18,6 @@ router.use(function requireLogin(req, res, next) {
 router.post('/myFamilyRecipes', async (req, res,next) => {
   try{
     if(req.body){
-      // var ingeidients_arr=
-      // req.body.ingredients_and_quantity.forEach(element => {ingeidients_arr.push({[element.name]:element.quantity});});
       let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
       let ans =await DButils.execQuery(
         `INSERT INTO family_recipes (user_id,recipe_name,owner,duration,recipe_event,ingredients_and_quantity,instruction,dishes)
@@ -53,8 +52,6 @@ router.get("/myFamilyRecipes",async (req,res,next)=>{
   router.post("/myRecipes",async (req,res,next)=>{
       try{
       if(req.body){
-        // var ingeidients_arr=[];
-        // req.body.ingredients_and_quantity.forEach(element => {ingeidients_arr.push({[element.name]:element.quantity});});
         let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
         await DButils.execQuery(
             `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,likes,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
@@ -79,7 +76,8 @@ router.get("/myFamilyRecipes",async (req,res,next)=>{
           ingredientsArrToClient(ans);
       res.status(200).send({ message: ans, success: true });
     }else{
-      throw { status: 401, message: "not allow" };      }
+      throw { status: 401, message: "not allow" };   
+       }
   }catch(error){
       next(error);
     }
