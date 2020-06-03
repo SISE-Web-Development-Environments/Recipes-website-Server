@@ -84,7 +84,7 @@ router.get("/search", async (req, res, next) => {
 //waiting for all promises return
 async function promiseAll(func, urlList) {
     let promises = [];
-    urlList.map((url) => promises.push(axios.get(url)));
+    urlList.map((url) => promises.push(func(url)));
     let info = await Promise.all(promises);
     return info;
 }

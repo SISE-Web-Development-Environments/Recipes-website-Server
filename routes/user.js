@@ -86,6 +86,20 @@ router.get("/lastViewRecipes", async (req, res, next) => {
   }
 })
 
+//get if the user watch in recipe and if recipe is  a favorite
+router.post('/search', async (req, res, next) => {
+  let userID = req.user_id;
+  let recipes = req.body.recipes;
+  try {
+    let promise = [];
+    recipes.map((recipeID) => { promise.push(checkWatchAndFavorite(recipeID, userID)) });
+    let ans = await Promise.all(promise)
+    res.status(200).send(ans);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/addToMyWatch', async (req, res, next) => {
   let userID = req.user_id;
   let recipeID = req.body.recipeID;
@@ -102,78 +116,98 @@ router.post('/addToMyWatch', async (req, res, next) => {
   }
 });
 
-
-router.post('/myFamilyRecipes', async (req, res,next) => {
-  try{
-    if(req.body){
+router.post('/myFamilyRecipes', async (req, res, next) => {
+  try {
+    if (req.body) {
       let ingredients_quentity = JSON.stringify(req.body.ingredients_and_quantity);
-      let ans =await DButils.execQuery(
+      let ans = await DButils.execQuery(
         `INSERT INTO family_recipes (user_id,recipe_name,owner,duration,recipe_event,ingredients_and_quantity,instruction,dishes)
         VALUES('${req.session.user_id}','${req.body.recipe_name}','${req.body.owner}','${req.body.duration}','${req.body.recipe_event}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
-    )
-    res.status(200).send({ message: ans, success: true });
-    }else{
-      throw { status: 400, message: "Bad request" };      
-    }
-
-  }catch(error){
-    next(error);
-  }
-});
-
-router.get("/myFamilyRecipes",async (req,res,next)=>{
-  try{
-  if(req.body){
-    let ans = await DButils.execQuery(
-        `SELECT * FROM family_recipes where user_id='${req.session.user_id}'`
-        )
-        ans.map((obj)=>{
-          obj.ingredients_and_quantity=JSON.parse(obj.ingredients_and_quantity);
-        })
-    res.status(200).send({ message: ans, success: true });
-  }else{
-    throw { status: 400, message: "Bad request" };      }
-  }catch(error){
-    next(error);
-  }
-});
-
-  router.post("/myRecipes",async (req,res,next)=>{
-      try{
-      if(req.body){
-        let ingredients_quentity = JSON.stringify(req.body.ingredients_and_quantity);
-        await DButils.execQuery(
-            `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,likes,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
-            VALUES('${req.session.user_id}','${req.body.recipe_name}','${req.body.duration}','${req.body.vegan}','0','${req.body.gluten}','${req.body.vegetarian}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
-        )          
-        res.status(200).send({ message: "post recipe successed", success: true });
-      }else{
-        throw { status: 401, message: "not allow" };      }
-    }catch{
-        next(error);
-      }
-
-  });
-
-  router.get("/myRecipes",async (req,res,next)=>{
-    try{
-    if(req.body){
-      let ans = await DButils.execQuery(
-          `SELECT * FROM my_recipes where user_id='${req.session.user_id}'`
-          )
-          ans.map((obj)=>{
-            obj.ingredients_and_quantity=JSON.parse(obj.ingredients_and_quantity);
-            obj.ingredients_and_quantity.map((o)=>{
-              console.log(o);
-            })
-          })
+      )
       res.status(200).send({ message: ans, success: true });
-    }else{
-      throw { status: 401, message: "not allow" };   
-       }
-  }catch(error){
-      next(error);
+    } else {
+      throw { status: 400, message: "Bad request" };
     }
+
+  } catch (error) {
+    next(error);
+  }
 });
+
+router.get("/myFamilyRecipes", async (req, res, next) => {
+  try {
+    if (req.body) {
+      let ans = await DButils.execQuery(
+        `SELECT * FROM family_recipes where user_id='${req.session.user_id}'`
+      )
+      ans.map((obj) => {
+        obj.ingredients_and_quantity = JSON.parse(obj.ingredients_and_quantity);
+      })
+      res.status(200).send({ message: ans, success: true });
+    } else {
+      throw { status: 400, message: "Bad request" };
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/myRecipes", async (req, res, next) => {
+  try {
+    if (req.body) {
+      let ingredients_quentity = JSON.stringify(req.body.ingredients_and_quantity);
+      await DButils.execQuery(
+        `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,likes,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
+            VALUES('${req.session.user_id}','${req.body.recipe_name}','${req.body.duration}','${req.body.vegan}','0','${req.body.gluten}','${req.body.vegetarian}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
+      )
+      res.status(200).send({ message: "post recipe successed", success: true });
+    } else {
+      throw { status: 401, message: "not allow" };
+    }
+  } catch{
+    next(error);
+  }
+});
+
+router.get("/myRecipes", async (req, res, next) => {
+  try {
+    if (req.body) {
+      let ans = await DButils.execQuery(
+        `SELECT * FROM my_recipes where user_id='${req.session.user_id}'`
+      )
+      ans.map((obj) => {
+        obj.ingredients_and_quantity = JSON.parse(obj.ingredients_and_quantity);
+        obj.ingredients_and_quantity.map((o) => {
+          console.log(o);
+        })
+      })
+      res.status(200).send({ message: ans, success: true });
+    } else {
+      throw { status: 401, message: "not allow" };
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+async function checkWatchAndFavorite(recipeID, userID) {
+  let watch = await DButils.execQuery(//delete if recipe id already exist with user id
+    `select * FROM watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
+  );
+  let favorite = await DButils.execQuery(//delete if recipe id already exist with user id
+    `select * FROM favorite_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
+  );
+  let obj = {};
+  obj.recipeID = recipeID;
+  obj.isWatch = false;
+  obj.isFavorite = false;
+  if (watch.length > 0) {
+    obj.isWatch = true;
+  }
+  if (favorite.length > 0) {
+    obj.isFavorite = true;
+  }
+  return obj;
+}
 
 module.exports = router;
