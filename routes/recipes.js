@@ -84,7 +84,7 @@ router.get("/search", async (req, res, next) => {
 //waiting for all promises return
 async function promiseAll(func, urlList) {
     let promises = [];
-    urlList.map((url) => promises.push(axios.get(url)));
+    urlList.map((url) => promises.push(func(url)));
     let info = await Promise.all(promises);
     return info;
 }
@@ -131,6 +131,15 @@ function getRelevantRecipeDateInformation(info) {
         instructions,
         servings
     } = info.data;
+    var Ingredients=[];
+
+    extendedIngredients.map((ing)=>{
+        let obj={};
+        obj.name= ing.name;
+        obj.qauntity= ing.amount;
+        obj.unit=ing.unit;
+        Ingredients.push(obj);
+    })
 
     return {
         recipeID: id,
@@ -141,7 +150,7 @@ function getRelevantRecipeDateInformation(info) {
         isVegeterian: vegetarian,
         isVegan: vegan,
         isGluten: glutenFree,
-        ingredients: extendedIngredients,
+        ingredients: Ingredients,
         cookingInstruction: instructions,
         dishesNumber: servings
     }
