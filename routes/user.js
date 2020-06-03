@@ -1,10 +1,8 @@
 var express = require("express");
 const DButils = require("../SQL/DButils");
 const axios = require("axios");
-
-var router= express.Router();
-
 var express = require("express");
+const api_domain = "https://api.spoonacular.com/recipes";
 var router= express.Router();
 
 router.use(function requireLogin(req, res, next) {
@@ -84,4 +82,4 @@ router.get("/myFamilyRecipes",async (req,res,next)=>{
 })
 
 
-module.exports=router;
+module.exports = router;
