@@ -43,10 +43,13 @@ router.get("/lastViewRecipes", async (req, res, next) => {
 })
 
 //get if the user watch in recipe and if recipe is  a favorite
-router.post('/search', async (req, res, next) => {
+router.get('/search', async (req, res, next) => {
   let userID = req.user_id;
-  let recipes = req.body.recipes;
+  let recipes = req.query.recipes;
   try {
+  if(!recipes || !Array.isArray(recipes)){ 
+     throw { status: 400, message: "Bad request" };
+  }
     let promise = [];
     recipes.map((recipeID) => { promise.push(checkWatchAndFavorite(recipeID, userID)) });
     let ans = await Promise.all(promise);
@@ -59,13 +62,20 @@ router.post('/search', async (req, res, next) => {
 router.post('/addToMyWatch', async (req, res, next) => {
   let userID = req.user_id;
   let recipeID = req.body.recipeID;
-  await DButils.execQuery(//delete if recipe id already exist with user id
-    `DELETE FROM  watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
-  ).then(await DButils.execQuery(
-    `INSERT INTO watch_recipes(user_id,recipe_id) VALUES(${userID},${recipeID})`
-  )).then(
-    res.status(200).send({ message: "The recipe was successfully added to my watch ", success: true }))
-    .catch(next(error));
+  try {
+    if(!recipeID || typeof recipeID !=='number'){ 
+      throw { status: 400, message: "Bad request" };
+   }
+    await DButils.execQuery(//delete if recipe id already exist with user id
+      `DELETE FROM  watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
+    );
+    await DButils.execQuery(
+      `INSERT INTO watch_recipes(user_id,recipe_id) VALUES(${userID},${recipeID})`
+    );
+    res.status(200).send({ message: "The recipe was successfully added to my watch ", success: true });
+  } catch (error) {
+    next(error);
+  }
 });
 
 //post my family recipes
