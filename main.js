@@ -3,6 +3,8 @@ require("dotenv").config();
 var express = require("express");
 var path = require("path");
 var logger = require("morgan");
+var cors = require("cors");
+
 const session = require("client-sessions");
 const DButils = require("./SQL/DButils");
 
@@ -22,6 +24,12 @@ app.use(
     //the session will be extended by activeDuration milliseconds
   })
 );
+//cors
+app.use(cors({
+    origin:"http://127.0.0.1:3000"
+  })
+);
+
 app.use(function (req, res, next) {
   if (req.session && req.session.user_id) {
     DButils.execQuery("SELECT user_id FROM users")
@@ -41,7 +49,6 @@ app.use("/user", user);
 app.use("/guest", guest);
 
 app.use(function (err, req, res, next) {
-  // console.error(err);
   res.status(err.status || 500).send({ message: err.message||"bad", success: false });
 });
 
