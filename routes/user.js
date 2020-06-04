@@ -43,10 +43,13 @@ router.get("/lastViewRecipes", async (req, res, next) => {
 })
 
 //get if the user watch in recipe and if recipe is  a favorite
-router.post('/search', async (req, res, next) => {
+router.get('/search', async (req, res, next) => {
   let userID = req.user_id;
-  let recipes = req.body.recipes;
+  let recipes = req.query.recipes;
   try {
+  if(!recipes || !Array.isArray(recipes)){ 
+     throw { status: 400, message: "Bad request" };
+  }
     let promise = [];
     recipes.map((recipeID) => { promise.push(checkWatchAndFavorite(recipeID, userID)) });
     let ans = await Promise.all(promise);
@@ -60,6 +63,9 @@ router.post('/addToMyWatch', async (req, res, next) => {
   let userID = req.user_id;
   let recipeID = req.body.recipeID;
   try {
+    if(!recipeID || typeof recipeID !=='number'){ 
+      throw { status: 400, message: "Bad request" };
+   }
     await DButils.execQuery(//delete if recipe id already exist with user id
       `DELETE FROM  watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
     );
@@ -110,20 +116,21 @@ router.get("/myFamilyRecipes", async (req, res, next) => {
 })
 
 //post my recipes
-  router.post("/myRecipes",async (req,res,next)=>{
-      try{
-      if(req.body && !validParameter(req.bo)){
-        let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
-        await DButils.execQuery(
-            `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
+router.post("/myRecipes", async (req, res, next) => {
+  try {
+    if (req.body && !validParameter(req.bo)) {
+      let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
+      await DButils.execQuery(
+        `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
             VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.duration}','${booleanToString(req.body.vegan)}','${booleanToString(req.body.gluten)}','${booleanToString(req.body.vegetarian)}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
-        )          
-        res.status(200).send({ message: "post recipe successed", success: true });
-      }else{
-        throw { status: 401, message: "not allow" };      }
-    }catch{
-        next(error);
-      }
+      )
+      res.status(200).send({ message: "post recipe successed", success: true });
+    } else {
+      throw { status: 401, message: "not allow" };
+    }
+  } catch{
+    next(error);
+  }
 
 })
 //get my recipes
@@ -171,82 +178,93 @@ function booleanToString(value) {
   } else return "0";
 }
 //parse ingredient array to client 
-function ingredientsArrToClient(array){
-  let arr=[];
-  array.map((obj)=>{
-    obj.ingredients_and_quantity=JSON.parse(obj.ingredients_and_quantity);
-    arr=[];
-    obj.ingredients_and_quantity.map((el,index)=>{
-      var keys = Object.keys( el );
-      var values = Object.values( el );
-      var units=values[0].split(" ");
-        arr.push({name:keys[0],quantity:units[0],unit:units[1]});
+function ingredientsArrToClient(array) {
+  let arr = [];
+  array.map((obj) => {
+    obj.ingredients_and_quantity = JSON.parse(obj.ingredients_and_quantity);
+    arr = [];
+    obj.ingredients_and_quantity.map((el, index) => {
+      var keys = Object.keys(el);
+      var values = Object.values(el);
+      var units = values[0].split(" ");
+      arr.push({ name: keys[0], quantity: units[0], unit: units[1] });
     })
     obj.ingredients_and_quantity = arr;
   })
 }
 //parse ingredient to db tables
-function ingredientsArrToDB(request){
-  let arr=[];
-  request.body.ingredients_and_quantity.forEach(element => {arr.push({[element.name]:element.quantity+" "+ element.unit});});
+function ingredientsArrToDB(request) {
+  let arr = [];
+  request.body.ingredients_and_quantity.forEach(element => { arr.push({ [element.name]: element.quantity + " " + element.unit }); });
   return arr;
 }
-function validParameter(body){
-  var keys = Object.keys( body );
-  keys.map((obj)=>{
-    switch(obj) {
+function validParameter(body) {
+  var keys = Object.keys(body);
+  keys.map((obj) => {
+    switch (obj) {
+      case "recipeID":
+        if (typeof body.reciprID !== 'number') {
+          return false;
+        }
+        break;
+      case "recipes":
+        if (typeof body.recipes !== 'object') {
+          return false;
+        }
+        break;
+
       case "recipe_name":
-        if(typeof body.recipe_name !=='string'){
+        if (typeof body.recipe_name !== 'string') {
           return false;
         }
         break;
       case "duration":
-        if(typeof body.duration !=='number'){
+        if (typeof body.duration !== 'number') {
           return false;
         }
         break;
       case "vegan":
-          if(typeof body.vegan !=='string' || body.vegan!='true' || body.vegan!='false' ){
-            return false;
-          }
-          break;
+        if (typeof body.vegan !== 'string' || (body.vegan != 'true' && body.vegan != 'false')) {
+          return false;
+        }
+        break;
       case "gluten":
-        if(typeof body.gluten !=='string' || body.gluten!='true' || body.gluten!='false' ){
+        if (typeof body.gluten !== 'string' || (body.vegan != 'true' && body.vegan != 'false')) {
           return false;
         }
         break;
       case "ingredients_and_quantity":
-        if(typeof body.ingredients_and_quantity !=='object' || body.ingredients_and_quantity.size<1){
+        if (typeof body.ingredients_and_quantity !== 'object' || body.ingredients_and_quantity.size < 1) {
           return false;
         }
         break;
       case "instruction":
-        if(typeof body.instruction !=='string'){
+        if (typeof body.instruction !== 'string') {
           return false;
         }
         break;
       case "dishes":
-        if(typeof body.dishes !=='number'){
+        if (typeof body.dishes !== 'number') {
           return false;
         }
-        break;  
+        break;
       case "vegetarian":
-        if(typeof body.vegetarian !=='string' || body.vegetarian!='true' || body.vegetarian!='false' ){
+        if (typeof body.vegetarian !== 'string' || body.vegetarian != 'true' || body.vegetarian != 'false') {
           return false;
         }
-        break;  
+        break;
       case "owner":
-        if(typeof body.owner !=='string'){
+        if (typeof body.owner !== 'string') {
           return false;
         }
         break;
       case "recipe_event":
-        if(typeof body.recipe_event !=='string'){
+        if (typeof body.recipe_event !== 'string') {
           return false;
         }
         break;
-        default:
-          return false;
+      default:
+        return false;
     }
   });
   return true;

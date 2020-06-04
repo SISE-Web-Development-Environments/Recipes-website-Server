@@ -6,8 +6,13 @@ const api_domain = "https://api.spoonacular.com/recipes";
 //get recipe information by recipe id 
 router.get("/information/:recipeID", async (req, res, next) => {
     let recipe_id = req.params.recipeID;
-    console.log(recipe_id);
+
+    
     try {
+        if(!recipe_id){
+            throw { status: 400, message: "Bad request" };
+
+        }
         let infoResponse = await axios.get(`${api_domain}/${recipe_id}/information`, {
             params: {
                 includeNutrition: false,
@@ -169,4 +174,3 @@ module.exports = {
     getRelevantRecipeDateInformation:getRelevantRecipeDateInformation,
     getArrayRecipeID:getArrayRecipeID
   }
-// module.exports = router,promiseAll,getRelevantRecipeDateShow, getRelevantRecipeDateInformation, getArrayRecipeID ;
