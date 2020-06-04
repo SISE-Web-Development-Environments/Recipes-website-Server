@@ -30,7 +30,6 @@ router.post("/login", async (req, res, next) => {
       next(error);
     }
   });
-
 router.post("/register", async (req,res,next) => {
     try{
     const user = (
@@ -45,10 +44,10 @@ router.post("/register", async (req,res,next) => {
             req.body.password,
             parseInt(process.env.bcrypt_saltRounds)
           );
-
+            if(!req.body.profileImage){req.body.profileImage=null;}
           await DButils.execQuery(
-              `INSERT INTO users (username,password,first_name,last_name,country,email)
-              VALUES('${req.body.username}','${hash_password}','${req.body.firstName}','${req.body.lastName}','${req.body.country}','${req.body.email}')`
+              `INSERT INTO users (username,password,first_name,last_name,country,email,profile_image)
+              VALUES('${req.body.username}','${hash_password}','${req.body.firstName}','${req.body.lastName}','${req.body.country}','${req.body.email}','${req.body.profileImage}')`
           )
           res.status(201).send({ message: "register successed", success: true });
       }

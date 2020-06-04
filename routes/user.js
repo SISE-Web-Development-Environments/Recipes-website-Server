@@ -5,17 +5,26 @@ var express = require("express");
 var recipes = require('./recipes.js');
 const api_domain = "https://api.spoonacular.com/recipes";
 var router = express.Router();
-
-//login check in
-router.use(function requireLogin(req, res, next) {
-  if (!req.user_id) {
-    next({ status: 401, message: "unauthorized" });
+//middleware aouthentication 
+router.use(function (req, res, next) {
+  try{
+  if (req.session && req.session.user_id) {
+    DButils.execQuery("SELECT user_id FROM users")
+      .then((users) => {
+        if (users.find((x) => x.user_id === req.session.user_id)) {
+          req.user_id = req.session.user_id;
+        }
+        next();//success
+      })
+      .catch((error) => next(error));
   } else {
-    next();
-  }
+    throw { status: 401, message: "unaouthorized" };  }
+}catch(error){
+  next(error);
+}
 });
-
-router.get("/lastViewRecipes", async (req, res, next) => {
+//get last 3 views of recipes
+router.get("/myWatch", async (req, res, next) => {
   let userID = req.user_id;
   try {
     let recipesIDList = await DButils.execQuery(
@@ -45,11 +54,11 @@ router.get("/lastViewRecipes", async (req, res, next) => {
 //get if the user watch in recipe and if recipe is  a favorite
 router.get('/search', async (req, res, next) => {
   let userID = req.user_id;
-  let recipes = req.query.recipes;
   try {
-  if(!recipes || !Array.isArray(recipes)){ 
-     throw { status: 400, message: "Bad request" };
-  }
+    let recipes = JSON.parse(req.query.recipes);
+    if (!recipes || !Array.isArray(recipes)) {
+      throw { status: 400, message: "Bad request" };
+    }
     let promise = [];
     recipes.map((recipeID) => { promise.push(checkWatchAndFavorite(recipeID, userID)) });
     let ans = await Promise.all(promise);
@@ -59,13 +68,13 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
-router.post('/addToMyWatch', async (req, res, next) => {
+router.post('/myWatch', async (req, res, next) => {
   let userID = req.user_id;
-  let recipeID = req.body.recipeID;
   try {
-    if(!recipeID || typeof recipeID !=='number'){ 
+    let recipeID = JSON.parse(req.body.recipeID);
+    if (!recipeID || typeof recipeID !== 'number') {
       throw { status: 400, message: "Bad request" };
-   }
+    }
     await DButils.execQuery(//delete if recipe id already exist with user id
       `DELETE FROM  watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
     );
@@ -78,19 +87,17 @@ router.post('/addToMyWatch', async (req, res, next) => {
   }
 });
 
-//post my family recipes
+// //post my family recipes
 // router.post('/myFamilyRecipes', async (req, res, next) => {
 //   try {
 
-//     if (req.body && !validParameterMyFamilyRecipes(req.body)) {
+//     if (req.body ) {
 //       let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
 //       let ans = await DButils.execQuery(
 //         `INSERT INTO family_recipes (user_id,recipe_name,owner,duration,recipe_event,ingredients_and_quantity,instruction,dishes)
 //         VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.owner}','${req.body.duration}','${req.body.recipe_event}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
-//       ).then(res.status(200).send({ message: ans, success: true }))
-//         .catch((err) => {
-//           throw { status: 400, message: "Bad request" };
-//         })
+//       )
+//       res.status(200).send({ message: ans, success: true });
 //     } else {
 //       throw { status: 400, message: "Bad request" };
 //     }
@@ -102,24 +109,24 @@ router.post('/addToMyWatch', async (req, res, next) => {
 //get my family recipes
 router.get("/myFamilyRecipes", async (req, res, next) => {
   try {
-      let ans = await DButils.execQuery(
-        `SELECT * FROM family_recipes where user_id='${req.user_id}'`
-      )
-      ingredientsArrToClient(ans);
-      res.status(200).send({ message: ans, success: true });
+    let ans = await DButils.execQuery(
+      `SELECT * FROM family_recipes where user_id='${req.user_id}'`
+    )
+    ingredientsArrToClient(ans);
+    res.status(200).send({ message: ans, success: true });
   } catch (error) {
     next(error);
   }
 })
 
-//post my recipes
+// post my recipes
 // router.post("/myRecipes", async (req, res, next) => {
 //   try {
-//     if (req.body && !validParameterMyRecipes(req.body)) {
+//     if (req.body) {
 //       let ingredients_quentity = JSON.stringify(ingredientsArrToDB(req));
 //       await DButils.execQuery(
-//         `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,gluten,vegetarian,ingredients_and_quantity,instruction,dishes)
-//             VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.duration}','${booleanToString(req.body.vegan)}','${booleanToString(req.body.gluten)}','${booleanToString(req.body.vegetarian)}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
+//         `INSERT INTO my_recipes (user_id,recipe_name,duration,vegan,gluten,ingredients_and_quantity,instruction,dishes)
+//             VALUES('${req.user_id}','${req.body.recipe_name}','${req.body.duration}','${booleanToString(req.body.vegan)}','${booleanToString(req.body.gluten)}','${ingredients_quentity}','${req.body.instruction}','${req.body.dishes}')`
 //       )
 //       res.status(200).send({ message: "post recipe successed", success: true });
 //     } else {
@@ -130,15 +137,15 @@ router.get("/myFamilyRecipes", async (req, res, next) => {
 //   }
 
 // })
-//get my recipes
+// get my recipes
 router.get("/myRecipes", async (req, res, next) => {
   try {
-      let arr = [];
-      let ans = await DButils.execQuery(
-        `SELECT * FROM my_recipes where user_id='${req.user_id}'`
-      )
-      ingredientsArrToClient(ans);
-      res.status(200).send({ message: ans, success: true });
+    let arr = []; 
+    let ans = await DButils.execQuery(
+      `SELECT * FROM my_recipes where user_id='${req.user_id}'`
+    )
+    ingredientsArrToClient(ans);
+    res.status(200).send({ message: ans, success: true });
   } catch (error) {
     next(error);
   }
@@ -164,13 +171,54 @@ async function checkWatchAndFavorite(recipeID, userID) {
   return obj;
 
 }
+//get favirite recipe foe user id
+router.get("/myFavoriteRecipes", async (req, res, next) => {
+  let userID = req.body.user;
+  try {
+    let favorites = await DButils.execQuery(
+      `SELECT recipe_id FROM favorite_recipes WHERE user_id= '${userID}'`
+    )
+    let urlList = [];
+    //create url for all recipe id
+    favorites.map((recipeID) => urlList.push(`${api_domain}/${recipeID.recipe_id}/information?apiKey=${process.env.spooncular_apiKey}`));
+    //sending request to external api
+    let infoResponse = await recipes.promiseAll(axios.get, urlList);
+    //extract data to array
+    let infoResponseData = [];
+    infoResponse.map((info) => infoResponseData.push(info.data));
+    //extract relevant informaiton for client
+    let relevantInfoResponse = recipes.getRelevantRecipeDateShow(infoResponseData);
+    //sending response
+    res.status(200).send(relevantInfoResponse);
+  } catch (error) {
+    next(error);
+  }
+});
 
+//add recipe to user favorite recipes list
+router.post('/myFavoriteRecipes', async (req, res, next) => {
+  let userID = req.body.user;
+  let recipeID = JASON.req.body.recipeID;
+  try {
+    let isExist = await DButils.execQuery(
+      `select * from favorite_recipes where recipe_id= ${recipeID} and user_id=${userID}`
+    );
+    if (isExist.length == 0) {//check it is a first time
+      await DButils.execQuery(
+        `INSERT INTO favorite_recipes(user_id,recipe_id) VALUES(${userID},${recipeID})`
+      );
+    }
+    res.status(200).send({ message: "The recipe was successfully added to favorites ", success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 //parse boolean to db tables
-function booleanToString(value) {
-  if (value === "true") {
-    return "1";
-  } else return "0";
-}
+// function booleanToString(value) {
+//   if (value === "true") {
+//     return "1";
+//   } else return "0";
+// }
 //parse ingredient array to client 
 function ingredientsArrToClient(array) {
   let arr = [];
@@ -304,7 +352,7 @@ function ingredientsArrToDB(request) {
 // }
 
 //logout and clear session
-router.post("/Logout", function (req, res) {
+router.post("/logout", function (req, res) {
   req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
   res.send({ success: true, message: "logout succeeded" });
 });

@@ -5,10 +5,8 @@ const api_domain = "https://api.spoonacular.com/recipes";
 
 //get recipe information by recipe id 
 router.get("/information/:recipeID", async (req, res, next) => {
-    let recipe_id = req.params.recipeID;
-
-    
     try {
+        let recipe_id = JSON.parse(req.params.recipeID);
         if(!recipe_id){
             throw { status: 400, message: "Bad request" };
 
@@ -173,4 +171,4 @@ module.exports = {
     getRelevantRecipeDateShow:getRelevantRecipeDateShow,
     getRelevantRecipeDateInformation:getRelevantRecipeDateInformation,
     getArrayRecipeID:getArrayRecipeID
-  }
+}
