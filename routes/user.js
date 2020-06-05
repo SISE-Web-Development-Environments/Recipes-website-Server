@@ -23,6 +23,24 @@ router.use(function (req, res, next) {
   next(error);
 }
 });
+
+//update profile image for user
+router.put('/profilePicture/:url', (req, res, next) => {
+  try {
+    let image= JSON.parse(req.params.url);
+    if(!image){
+      throw { status: 400, message: "Bad request" };
+    }
+     await DButils.execQuery(
+      `update users set profile_image=${image} where user_id='${req.user_id}'`
+    )
+    res.status(200).send({ message: "Profile picture successfully updated", success: true });
+  } catch (error) {
+    next(error);
+  }
+
+
+});
 //get last 3 views of recipes
 router.get("/myWatch", async (req, res, next) => {
   let userID = req.user_id;
@@ -260,6 +278,20 @@ router.post('/myFavoriteRecipes', async (req, res, next) => {
         `INSERT INTO favorite_recipes(user_id,recipe_id) VALUES(${userID},${recipeID})`
       );
     }
+    res.status(200).send({ message: "The recipe was successfully added to favorites ", success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+//remove favorite recipe from user list
+router.delete('/myFavoriteRecipes', async (req, res, next) => {
+  let userID = req.user_id;
+  try {
+    let recipeID = JSON.parse(req.query.recipeID);
+    await DButils.execQuery(
+      `delete from favorite_recipes where recipe_id= ${recipeID} and user_id=${userID}`
+    );
     res.status(200).send({ message: "The recipe was successfully added to favorites ", success: true });
   } catch (error) {
     next(error);
