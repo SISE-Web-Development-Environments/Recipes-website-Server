@@ -117,7 +117,7 @@ router.get("/myFamilyRecipes", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
 
 // post my recipes
 // router.post("/myRecipes", async (req, res, next) => {
@@ -173,7 +173,7 @@ async function checkWatchAndFavorite(recipeID, userID) {
 }
 //get favirite recipe foe user id
 router.get("/myFavoriteRecipes", async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   try {
     let favorites = await DButils.execQuery(
       `SELECT recipe_id FROM favorite_recipes WHERE user_id= '${userID}'`
@@ -197,9 +197,10 @@ router.get("/myFavoriteRecipes", async (req, res, next) => {
 
 //add recipe to user favorite recipes list
 router.post('/myFavoriteRecipes', async (req, res, next) => {
-  let userID = req.body.user;
-  let recipeID = JASON.req.body.recipeID;
+  let userID = req.user_id;
+
   try {
+    let recipeID = JSON.parse(req.body.recipeID);
     let isExist = await DButils.execQuery(
       `select * from favorite_recipes where recipe_id= ${recipeID} and user_id=${userID}`
     );

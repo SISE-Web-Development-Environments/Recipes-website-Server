@@ -3,7 +3,7 @@ require("dotenv").config();
 var express = require("express");
 var path = require("path");
 var logger = require("morgan");
-var cors = require("cors");
+// var cors = require("cors");
 
 const session = require("client-sessions");
 const DButils = require("./SQL/DButils");
