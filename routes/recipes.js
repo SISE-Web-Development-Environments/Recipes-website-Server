@@ -154,8 +154,8 @@ function getRelevantRecipeDateInformation(info) {
         isVegan: vegan,
         isGluten: glutenFree,
         ingredients: Ingredients,
-        cookingInstruction: instructions,
-        dishesNumber: servings
+        instructions: instructions,
+        dishes: servings
     }
 }
 
