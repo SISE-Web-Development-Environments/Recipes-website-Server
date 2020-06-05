@@ -198,7 +198,7 @@ router.get("/myFavoriteRecipes", async (req, res, next) => {
 //add recipe to user favorite recipes list
 router.post('/myFavoriteRecipes', async (req, res, next) => {
   let userID = req.body.user;
-  let recipeID = JASON.req.body.recipeID;
+  let recipeID = JSON.parse(req.body.recipeID);
   try {
     let isExist = await DButils.execQuery(
       `select * from favorite_recipes where recipe_id= ${recipeID} and user_id=${userID}`
