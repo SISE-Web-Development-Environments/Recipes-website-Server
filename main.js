@@ -3,7 +3,7 @@ require("dotenv").config();
 var express = require("express");
 var path = require("path");
 var logger = require("morgan");
-var cors = require("cors");
+// var cors = require("cors");
 
 const session = require("client-sessions");
 const DButils = require("./SQL/DButils");
@@ -36,7 +36,7 @@ app.use("/guest", guest);
 app.use("/user", user);
 
 app.use(function (err, req, res, next) {
-  res.status(err.status || 500).send({ message: err.message||"bad", success: false });
+  res.status(err.status || 500).send({ message: err.message||"bad request", success: false });
 });
 
 var port = process.env.PORT || "3000";

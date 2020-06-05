@@ -113,11 +113,36 @@ router.get("/myFamilyRecipes", async (req, res, next) => {
       `SELECT * FROM family_recipes where user_id='${req.user_id}'`
     )
     ingredientsArrToClient(ans);
-    res.status(200).send({ message: ans, success: true });
+    let information= ans.map((info) => {
+      const {
+          recipe_id,
+          recipe_image,
+          owner,
+          recipe_name,
+          duration,
+          recipe_event,
+          instruction,
+          dishes,
+          ingredients_and_quantity
+      } = info;
+
+      return {
+          recipeID: recipe_id,
+          imageURL: recipe_image,
+          name: recipe_name,
+          owner:owner,
+          cookingDuration: duration,
+          ingredients:ingredients_and_quantity,
+          event:recipe_event,
+          instructions:instruction,
+          dishes:dishes
+      }
+  });
+    res.status(200).send({ message: information ,success: true });
   } catch (error) {
     next(error);
   }
-})
+});
 
 // post my recipes
 // router.post("/myRecipes", async (req, res, next) => {
@@ -145,7 +170,33 @@ router.get("/myRecipes", async (req, res, next) => {
       `SELECT * FROM my_recipes where user_id='${req.user_id}'`
     )
     ingredientsArrToClient(ans);
-    res.status(200).send({ message: ans, success: true });
+    let information= ans.map((info) => {
+      const {
+          recipe_id,
+          recipe_image,
+          recipe_name,
+          duration,
+          vegan,
+          gluten,
+          instruction,
+          dishes,
+          ingredients_and_quantity
+      } = info;
+
+      return {
+          recipeID: recipe_id,
+          imageURL: recipe_image,
+          name: recipe_name,
+          cookingDuration: duration,
+          isVegan: vegan,
+          isGluten: gluten,
+          ingredients:ingredients_and_quantity,
+          instructions:instruction,
+          dishes:dishes
+      }
+  });
+
+    res.status(200).send({ message: information, success: true });
   } catch (error) {
     next(error);
   }
@@ -173,7 +224,7 @@ async function checkWatchAndFavorite(recipeID, userID) {
 }
 //get favirite recipe foe user id
 router.get("/myFavoriteRecipes", async (req, res, next) => {
-  let userID = req.body.user;
+  let userID = req.user_id;
   try {
     let favorites = await DButils.execQuery(
       `SELECT recipe_id FROM favorite_recipes WHERE user_id= '${userID}'`
@@ -197,9 +248,10 @@ router.get("/myFavoriteRecipes", async (req, res, next) => {
 
 //add recipe to user favorite recipes list
 router.post('/myFavoriteRecipes', async (req, res, next) => {
-  let userID = req.body.user;
-  let recipeID = JSON.parse(req.body.recipeID);
+  let userID = req.user_id;
+
   try {
+    let recipeID = JSON.parse(req.body.recipeID);
     let isExist = await DButils.execQuery(
       `select * from favorite_recipes where recipe_id= ${recipeID} and user_id=${userID}`
     );
