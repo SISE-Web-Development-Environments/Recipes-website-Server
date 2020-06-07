@@ -48,22 +48,25 @@ router.get("/randomRecipes", async (req, res, next) => {
 })
 
 //get showing inforamation for search recipes
-router.get("/search", async (req, res, next) => {
+router.get("/search/query/:query/number/:number", async (req, res, next) => {
     try {
-        if(!req.query.number){
-            req.query.number=5;
+        if(!req.params.number ||( req.params.number!=10 && req.params.number!=15 && req.params.number!=5)){
+            req.params.number=5;
         }
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
-                query: req.query.query,
-                number: req.query.number,
+                query: req.params.query,
+                number: req.params.number,
                 cuisine: req.query.cuisine,
                 intolerances: req.query.intolerances,
                 diet: req.query.diet,
                 apiKey: process.env.spooncular_apiKey
             }
         });
+        if(ans.data.number==0){
+            res.status(204).send({message:"No recipes found for the search params"});
+        }else{
         //create array recipes id
         let data = getArrayRecipeID(ans.data);
         let urlList = [];
@@ -77,7 +80,9 @@ router.get("/search", async (req, res, next) => {
         //extract relevant informaiton for client
         let relevantInfoResponse = getRelevantRecipeDateShow(infoResponseData);
         //sending response
+        
         res.status(200).send(relevantInfoResponse);
+        }
     } catch (error) {
         next(error);
     }
