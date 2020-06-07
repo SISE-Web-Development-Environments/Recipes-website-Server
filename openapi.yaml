@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: recipes web
+  description: |
+    This is a recipes website server
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: shirangolzar@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.1
+servers:
+- url: https://localhost:3000
+tags:
+- name: guest
+  description: every visitor in the website that are not connected
+- name: user
+  description: user that sign up to website already
+- name: recipes
+  description: Operations about recipes
+paths:
+  /guest/register:
+    post:
+      tags:
+      - guest
+      summary: sign up to website
+      description: register form to the website
+      operationId: register
+      requestBody:
+        description: parameter to sign up
+        content:
+          applictaion/json:
+            schema:
+              $ref: '#/components/schemas/register'
+        required: true
+      responses:
+        "201":
+          description: register successed
+        "409":
+          description: Username already in use
+  /guest/login:
+    post:
+      tags:
+      - guest
+      summary: user login to website
+      description: log in to the website
+      requestBody:
+        description: login
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login'
+        required: true
+      responses:
+        "200":
+          description: login successed
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: session=43ke34kfdkf9k49r4kr9
+        "401":
+          description: Username or Password incorrect
+  /recipes/informaion/{recipeID}:
+    get:
+      tags:
+      - recipes
+      summary: find recipe by recipeId
+      description: get recipe by his recipeID
+      parameters:
+      - name: recipeID
+        in: path
+        description: ID of recipe to return
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Succesfull opearation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recipeInformation'
+        "400":
+          description: Bad request
+  /recipes/randomRecipes:
+    get:
+      tags:
+      - recipes
+      summary: get 3 random recipes
+      description: get 3 random recipes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipeDisplay'
+  /recipes/search/query/{query}/number/{number}:
+    get:
+      tags:
+      - recipes
+      summary: recipes search
+      description: searching recipes by tags or string value
+      parameters:
+      - name: query
+        in: path
+        description: the recipe name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: number
+        in: path
+        description: size of resulsts . default is 5 results. if number is not 5 or
+          10 or 15 then default will be choose.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          default: 5
+          enum:
+          - 5
+          - 10
+          - 15
+      - name: cuisine
+        in: query
+        description: cusine tags
+        required: false
+        style: form
+        explode: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/cousineType'
+            example: Jewish
+      - name: intolerances
+        in: query
+        description: intolerance tags
+        required: false
+        style: form
+        explode: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/intolerancesType'
+            example: Gluten Free
+      - name: diet
+        in: query
+        description: diet tags
+        required: false
+        style: form
+        explode: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dietType'
+            example: Vegan
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipeDisplay'
+        "204":
+          description: No recipes found for the search params
+        "400":
+          description: Bad request
+  /user/search/{recipes}:
+    get:
+      tags:
+      - user
+      summary: extends information search to user
+      description: get indication if user already watch the recipe and save it
+      parameters:
+      - name: recipes
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: array
+          description: array of id's recipes
+          example:
+          - 1
+          - 2
+          - 3
+          - 4
+          items:
+            type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipeExtendDisplay'
+        "400":
+          description: bad request
+      security:
+      - cookieAuth: []
+  /user/myFavoriteRecipes:
+    get:
+      tags:
+      - user
+      summary: get favorites recipes of user
+      description: get favorites recipes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipeDisplay'
+        "400":
+          description: Bad request
+      security:
+      - cookieAuth: []
+    post:
+      tags:
+      - user
+      summary: add a new recipe to favorite recipe list
+      description: add a new recipe to favorite recipe list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body'
+        required: true
+      responses:
+        "200":
+          description: The recipe was successfully added to favorites
+        "400":
+          description: Bad request
+      security:
+      - cookieAuth: []
+  /user/myFavoriteRecipes/{recipeID}:
+    delete:
+      tags:
+      - user
+      summary: Delete recipe from my favorite recipe list
+      description: delete  favorite recipe
+      operationId: delete recipe
+      parameters:
+      - name: recipeID
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: The recipe was successfully remove from favorites
+        "400":
+          description: Bad request
+      security:
+      - cookieAuth: []
+  /user/myWatch:
+    get:
+      tags:
+      - user
+      summary: get user's 3 last view recipes
+      description: get user's 3 last view recipes if exists (maximum 3 recipes)
+      operationId: getMyLastRecipes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipeDisplay'
+      security:
+      - cookieAuth: []
+    post:
+      tags:
+      - user
+      summary: add a recipe to user's watch list
+      description: add a recipe to watch recipe list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_1'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: bad request
+      security:
+      - cookieAuth: []
+  /user/myRecipes:
+    get:
+      tags:
+      - user
+      summary: get my recipes
+      description: get my recipes
+      operationId: getMyRecipes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/myRecipe'
+        "400":
+          description: Bad request
+      security:
+      - cookieAuth: []
+  /user/myFamilyRecipes:
+    get:
+      tags:
+      - user
+      summary: get user's family recipes
+      description: get user's family recipes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/familyRecipe'
+      security:
+      - cookieAuth: []
+  /user/profilePicture/{url}:
+    put:
+      tags:
+      - user
+      summary: update profile picture
+      description: update profile picture
+      parameters:
+      - name: url
+        in: path
+        description: profile picture
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: www.image.co.il/fdfdfe343dfcd
+      responses:
+        "200":
+          description: Profile picture successfully updated
+        "400":
+          description: Bad request
+      security:
+      - cookieAuth: []
+  /user/userInformation:
+    get:
+      tags:
+      - user
+      summary: get user information profile
+      description: information about the user
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/userInformation'
+      security:
+      - cookieAuth: []
+  /user/logout:
+    post:
+      tags:
+      - user
+      summary: user log out from the website
+      description: reset the session (cookie)
+      responses:
+        "200":
+          description: logout success
+      security:
+      - cookieAuth: []
+components:
+  schemas:
+    register:
+      required:
+      - country
+      - email
+      - firstName
+      - lastName
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          maxLength: 8
+          minLength: 3
+          pattern: ^[A-Za-z0-9]+$
+          type: string
+        password:
+          maxLength: 10
+          minLength: 5
+          pattern: ^(?=.*\d)(?=.*?[#?!@$%^&*-]).{5,10}$
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        country:
+          $ref: '#/components/schemas/countries'
+        email:
+          type: string
+        profileImage:
+          type: string
+    login:
+      required:
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    userInformation:
+      type: object
+      properties:
+        username:
+          type: string
+          example: hende
+        firstName:
+          type: string
+          example: hen
+        lastName:
+          type: string
+          example: debi
+        country:
+          $ref: '#/components/schemas/countries'
+        email:
+          type: string
+          example: hen123@walla.com
+        profilePicture:
+          type: string
+    recipeDisplay:
+      required:
+      - cookingDuration
+      - imageURL
+      - isGluten
+      - isVegan
+      - isVegeterian
+      - likes
+      - name
+      - recipeID
+      type: object
+      properties:
+        recipeID:
+          type: integer
+          example: 12
+        imageURL:
+          type: string
+          example: https://spoonacular.com/recipeImages/12-556x370.jpg
+        name:
+          type: string
+          example: Roasted Peppers with Boquerones
+        cookingDuration:
+          type: integer
+          example: 4500
+        likes:
+          type: integer
+          example: 2
+        isVegeterian:
+          type: boolean
+          example: true
+        isVegan:
+          type: boolean
+          example: false
+        isGluten:
+          type: boolean
+          example: false
+    recipeInformation:
+      required:
+      - cookingDuration
+      - dishes
+      - imageURL
+      - ingredients
+      - instructions
+      - isGluten
+      - isVegan
+      - isVegeterian
+      - likes
+      - name
+      - recipeID
+      type: object
+      properties:
+        recipeID:
+          type: integer
+          example: 12
+        imageURL:
+          type: string
+          example: https://spoonacular.com/recipeImages/12-556x370.jpg
+        name:
+          type: string
+          example: Roasted Peppers with Boquerones
+        cookingDuration:
+          type: integer
+          example: 4500
+        likes:
+          type: integer
+          example: 2
+        isVegeterian:
+          type: boolean
+          example: true
+        isVegan:
+          type: boolean
+          example: false
+        isGluten:
+          type: boolean
+          example: false
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/recipeInformation_ingredients'
+        instructions:
+          type: string
+          example: mix the water with the wheat
+        dishes:
+          type: integer
+          example: 3
+    myRecipe:
+      required:
+      - cookingDuration
+      - dishes
+      - imageURL
+      - ingredients
+      - instructions
+      - isGluten
+      - isVegan
+      - name
+      - recipeID
+      type: object
+      properties:
+        recipeID:
+          type: integer
+          example: 12
+        imageURL:
+          type: string
+          example: https://spoonacular.com/recipeImages/12-556x370.jpg
+        name:
+          type: string
+          example: Roasted Peppers with Boquerones
+        cookingDuration:
+          type: integer
+          example: 4500
+        isVegan:
+          type: boolean
+          example: false
+        isGluten:
+          type: boolean
+          example: false
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/recipeInformation_ingredients'
+        instructions:
+          type: string
+          example: mix the water with the wheat
+        dishes:
+          type: integer
+          example: 3
+    familyRecipe:
+      required:
+      - cookingDuration
+      - dishes
+      - event
+      - imageURL
+      - ingredients
+      - instructions
+      - name
+      - owner
+      - recipeID
+      type: object
+      properties:
+        recipeID:
+          type: integer
+          example: 12
+        imageURL:
+          type: string
+          example: https://spoonacular.com/recipeImages/12-556x370.jpg
+        name:
+          type: string
+          example: Roasted Peppers with Boquerones
+        owner:
+          type: string
+          example: uncle Moshe
+        cookingDuration:
+          type: integer
+          example: 4500
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/recipeInformation_ingredients'
+        event:
+          type: string
+          example: rosh Ha-shana
+        instructions:
+          type: string
+          example: mix the water with the wheat
+        dishes:
+          type: integer
+          example: 3
+    recipeExtendDisplay:
+      required:
+      - isFavorite
+      - isWatch
+      - recipeID
+      type: object
+      properties:
+        recipeID:
+          type: integer
+          example: 12
+        isWatch:
+          type: boolean
+          example: true
+        isFavorite:
+          type: boolean
+          example: false
+    dietType:
+      type: string
+      enum:
+      - Gluten Free
+      - Ketogenic
+      - Vegetarian
+      - Lacto-Vegetarian
+      - Ovo-Vegetarian
+      - Vegan
+      - Pescetarian
+      - Paleo
+      - Primal
+      - Whole30
+    intolerancesType:
+      type: string
+      enum:
+      - Dairy
+      - Egg
+      - Gluten
+      - Grain
+      - Peanut
+      - Seafood
+      - Sesame
+      - Shellfish
+      - Soy
+      - Sulfite
+      - Tree Nut
+      - Wheat
+    cousineType:
+      type: string
+      enum:
+      - African
+      - American
+      - British
+      - Cajun
+      - Caribbean
+      - Chinese
+      - Eastern European
+      - European
+      - French
+      - German
+      - Greek
+      - Indian
+      - Irish
+      - Italian
+      - Japanese
+      - Jewish
+      - Korean
+      - Latin American
+      - Mediterranean
+      - Mexican
+      - Middle Eastern
+      - Nordic
+      - Southern
+      - Spanish
+      - Thai
+      - Vietnamese
+    countries:
+      type: string
+      enum:
+      - Afghanistan
+      - Åland Islands
+      - Albania
+      - Algeria
+      - American Samoa
+      - Andorra
+      - Angola
+      - Anguilla
+      - Antarctica
+      - Antigua and Barbuda
+      - Argentina
+      - Armenia
+      - Aruba
+      - Australia
+      - Austria
+      - Azerbaijan
+      - Bahamas
+      - Bahrain
+      - Bangladesh
+      - Barbados
+      - Belarus
+      - Belgium
+      - Belize
+      - Benin
+      - Bermuda
+      - Bhutan
+      - Bolivia (Plurinational State of)
+      - Bonaire
+      - Sint Eustatius and Saba
+      - Bosnia and Herzegovina
+      - Botswana
+      - Bouvet Island
+      - Brazil
+      - British Indian Ocean Territory
+      - United States Minor Outlying Islands
+      - Virgin Islands (British)
+      - Virgin Islands (U.S.)
+      - Brunei Darussalam
+      - Bulgaria
+      - Burkina Faso
+      - Burundi
+      - Cambodia
+      - Cameroon
+      - Canada
+      - Cabo Verde
+      - Cayman Islands
+      - Central African Republic
+      - Chad
+      - Chile
+      - China
+      - Christmas Island
+      - Cocos (Keeling) Islands
+      - Colombia
+      - Comoros
+      - Congo
+      - Congo (Democratic Republic of the)
+      - Cook Islands
+      - Costa Rica
+      - Croatia
+      - Cuba
+      - Curaçao
+      - Cyprus
+      - Czech Republic
+      - Denmark
+      - Djibouti
+      - Dominica
+      - Dominican Republic
+      - Ecuador
+      - Egypt
+      - El Salvador
+      - Equatorial Guinea
+      - Eritrea
+      - Estonia
+      - Ethiopia
+      - Falkland Islands (Malvinas)
+      - Faroe Islands
+      - Fiji
+      - Finland
+      - France
+      - French Guiana
+      - French Polynesia
+      - French Southern Territories
+      - Gabon
+      - Gambia
+      - Georgia
+      - Germany
+      - Ghana
+      - Gibraltar
+      - Greece
+      - Greenland
+      - Grenada
+      - Guadeloupe
+      - Guam
+      - Guatemala
+      - Guernsey
+      - Guinea
+      - Guinea-Bissau
+      - Guyana
+      - Haiti
+      - Heard Island and McDonald Islands
+      - Holy See
+      - Honduras
+      - Hong Kong
+      - Hungary
+      - Iceland
+      - India
+      - Indonesia
+      - Côte d'Ivoire
+      - Iran (Islamic Republic of)
+      - Iraq
+      - Ireland
+      - Isle of Man
+      - Israel
+      - Italy
+      - Jamaica
+      - Japan
+      - Jersey
+      - Jordan
+      - Kazakhstan
+      - Kenya
+      - Kiribati
+      - Kuwait
+      - Kyrgyzstan
+      - Lao People's Democratic Republic
+      - Latvia
+      - Lebanon
+      - Lesotho
+      - Liberia
+      - Libya
+      - Liechtenstein
+      - Lithuania
+      - Luxembourg
+      - Macao
+      - Macedonia (the former Yugoslav Republic of)
+      - Madagascar
+      - Malawi
+      - Malaysia
+      - Maldives
+      - Mali
+      - Malta
+      - Marshall Islands
+      - Martinique
+      - Mauritania
+      - Mauritius
+      - Mayotte
+      - Mexico
+      - Micronesia (Federated States of)
+      - Moldova (Republic of)
+      - Monaco
+      - Mongolia
+      - Montenegro
+      - Montserrat
+      - Morocco
+      - Mozambique
+      - Myanmar
+      - Namibia
+      - Nauru
+      - Nepal
+      - Netherlands
+      - New Caledonia
+      - New Zealand
+      - Nicaragua
+      - Niger
+      - Nigeria
+      - Niue
+      - Norfolk Island
+      - Korea (Democratic People's Republic of)
+      - Northern Mariana Islands
+      - Norway
+      - Oman
+      - Pakistan
+      - Palau
+      - Palestine
+      - State of
+      - Panama
+      - Papua New Guinea
+      - Paraguay
+      - Peru
+      - Philippines
+      - Pitcairn
+      - Poland
+      - Portugal
+      - Puerto Rico
+      - Qatar
+      - Republic of Kosovo
+      - Réunion
+      - Romania
+      - Russian Federation
+      - Rwanda
+      - Saint Barthélemy
+      - Saint Helena
+      - Ascension and Tristan da Cunha
+      - Saint Kitts and Nevis
+      - Saint Lucia
+      - Saint Martin (French part)
+      - Saint Pierre and Miquelon
+      - Saint Vincent and the Grenadines
+      - Samoa
+      - San Marino
+      - Sao Tome and Principe
+      - Saudi Arabia
+      - Senegal
+      - Serbia
+      - Seychelles
+      - Sierra Leone
+      - Singapore
+      - Sint Maarten (Dutch part)
+      - Slovakia
+      - Slovenia
+      - Solomon Islands
+      - Somalia
+      - South Africa
+      - South Georgia and the South Sandwich Islands
+      - Korea (Republic of)
+      - South Sudan
+      - Spain
+      - Sri Lanka
+      - Sudan
+      - Suriname
+      - Svalbard and Jan Mayen
+      - Swaziland
+      - Sweden
+      - Switzerland
+      - Syrian Arab Republic
+      - Taiwan
+      - Tajikistan
+      - Tanzania
+      - United Republic of
+      - Thailand
+      - Timor-Leste
+      - Togo
+      - Tokelau
+      - Tonga
+      - Trinidad and Tobago
+      - Tunisia
+      - Turkey
+      - Turkmenistan
+      - Turks and Caicos Islands
+      - Tuvalu
+      - Uganda
+      - Ukraine
+      - United Arab Emirates
+      - United Kingdom of Great Britain and Northern Ireland
+      - United States of America
+      - Uruguay
+      - Uzbekistan
+      - Vanuatu
+      - Venezuela (Bolivarian Republic of)
+      - Viet Nam
+      - Wallis and Futuna
+      - Western Sahara
+      - Yemen
+      - Zambia
+      - Zimbabwe
+    body:
+      properties:
+        recipeID:
+          type: integer
+    body_1:
+      properties:
+        recipeID:
+          type: integer
+    recipeInformation_ingredients:
+      type: object
+      properties:
+        name:
+          type: string
+          example: tomato
+        quantity:
+          type: integer
+          example: 3
+        unit:
+          type: string
+          example: gram
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      name: session
+      in: cookie
