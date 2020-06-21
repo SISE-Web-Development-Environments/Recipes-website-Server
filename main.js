@@ -15,10 +15,13 @@ const recipes= require("./routes/recipes");
 var app = express();
 app.use(logger("dev")); //logger
 // cors
-app.use(cors({
-  origin:"http://127.0.0.1:3000"
-})
-);
+const corsConfig = {
+  origin: true,
+  credentials: true,
+};
+app.use(cors(corsConfig));
+app.options("*", cors(corsConfig));
+
 app.use(express.json()); // parse application/json
 app.use(
   session({
