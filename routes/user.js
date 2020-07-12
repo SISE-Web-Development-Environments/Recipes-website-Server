@@ -171,7 +171,7 @@ router.get("/myFamilyRecipes", async (req, res, next) => {
     }
   });
 
-  async function checkWatchAndFavorite(recipeID, userID) {
+  async function  checkWatchAndFavorite(recipeID, userID) {
     let watch = await DButils.execQuery(//delete if recipe id already exist with user id
       `select * FROM watch_recipes WHERE user_id=${userID} and recipe_id=${recipeID} `
     );

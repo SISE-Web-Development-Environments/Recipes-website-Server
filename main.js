@@ -27,8 +27,9 @@ app.use(
   session({
     cookieName: "session", // the cookie key name
     secret: process.env.COOKIE_SECRET, // the encryption key
-    duration: 60*60*3*1* 1000, // expired after 3 hours
-    activeDuration: 0, // if expiresIn < activeDuration,
+    duration: 9000 * 1000, // expired after 3 hours
+    activeDuration: 200000*1000, // if expiresIn < activeDuration,
+    user_id:null,
     cookie: {
       httpOnly: false
     }
