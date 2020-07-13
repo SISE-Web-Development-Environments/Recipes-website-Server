@@ -37,9 +37,23 @@ router.get("/randomRecipes", async (req, res, next) => {
                 apiKey: process.env.spooncular_apiKey
             }
         });
-
+        ans.data.recipes.map(async (item)=>{
+            console.log(item);
+            while(!(item.hasOwnProperty('analyzedInstructions')) || item.analyzedInstructions.length==0){
+                item = await axios.get(`${api_domain}/random`, {
+                    params: {
+                        limitLicense: true,
+                        number: 1,
+                        apiKey: process.env.spooncular_apiKey
+                    }
+                });
+            }
+        
+        });
+        
         //extract relevant informaiton for client
         let relevantInfoResponse = getRelevantRecipeDateShow(ans.data.recipes);
+        console.log(relevantInfoResponse);
         //sending response
         res.status(200).send(relevantInfoResponse);
     } catch (error) {
