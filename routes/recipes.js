@@ -37,9 +37,23 @@ router.get("/randomRecipes", async (req, res, next) => {
                 apiKey: process.env.spooncular_apiKey
             }
         });
-
+        ans.data.recipes.map(async (item)=>{
+            console.log(item);
+            while(!(item.hasOwnProperty('analyzedInstructions')) || item.analyzedInstructions.length==0){
+                item = await axios.get(`${api_domain}/random`, {
+                    params: {
+                        limitLicense: true,
+                        number: 1,
+                        apiKey: process.env.spooncular_apiKey
+                    }
+                });
+            }
+        
+        });
+        
         //extract relevant informaiton for client
         let relevantInfoResponse = getRelevantRecipeDateShow(ans.data.recipes);
+        console.log(relevantInfoResponse);
         //sending response
         res.status(200).send(relevantInfoResponse);
     } catch (error) {
@@ -53,6 +67,7 @@ router.get("/search/query/:query/number/:number", async (req, res, next) => {
         if(!req.params.number ||( req.params.number!=10 && req.params.number!=15 && req.params.number!=5)){
             req.params.number=5;
         }
+        console.log(req.query.cuisine);
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
@@ -99,6 +114,7 @@ async function promiseAll(func, urlList) {
 
 //extract relevant recipe data from api response for show
 function getRelevantRecipeDateShow(infoList) {
+    console.log(infoList);
     return infoList.map((info) => {
         const {
             id,

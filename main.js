@@ -16,15 +16,15 @@ var app = express();
 app.use(logger("dev")); //logger
 // cors
 app.use(cors({
-  origin:"http://127.0.0.1:3000"
-})
-);
+  origin:"http://localhost:8081/"
+// })
+}));
 app.use(express.json()); // parse application/json
 app.use(
   session({
     cookieName: "session", // the cookie key name
     secret: process.env.COOKIE_SECRET, // the encryption key
-    duration: 60*60*3*1* 1000, // expired after 3 hours
+    duration: 60*60*3*1*1000, // expired after 3 hours
     activeDuration: 0 // if expiresIn < activeDuration,
     //the session will be extended by activeDuration milliseconds
   })
