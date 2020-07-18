@@ -7,7 +7,7 @@ const api_domain = "https://api.spoonacular.com/recipes";
 router.get("/information/:recipeID", async (req, res, next) => {
     try {
         let recipe_id = JSON.parse(req.params.recipeID);
-        if(!recipe_id){
+        if (!recipe_id) {
             throw { status: 400, message: "Bad request" };
 
         }
@@ -38,8 +38,7 @@ router.get("/randomRecipes", async (req, res, next) => {
             }
         });
         ans.data.recipes.map(async (item)=>{
-            console.log(item);
-            while(!(item.hasOwnProperty('analyzedInstructions')) || item.analyzedInstructions.length==0){
+            while(!(item.hasOwnProperty('analyzedInstructions')) || item.analyzedInstructions.length==0 ||(!item.image || item.image=="" )){
                 item = await axios.get(`${api_domain}/random`, {
                     params: {
                         limitLicense: true,
@@ -53,7 +52,6 @@ router.get("/randomRecipes", async (req, res, next) => {
         
         //extract relevant informaiton for client
         let relevantInfoResponse = getRelevantRecipeDateShow(ans.data.recipes);
-        console.log(relevantInfoResponse);
         //sending response
         res.status(200).send(relevantInfoResponse);
     } catch (error) {
@@ -64,10 +62,9 @@ router.get("/randomRecipes", async (req, res, next) => {
 //get showing inforamation for search recipes
 router.get("/search/query/:query/number/:number", async (req, res, next) => {
     try {
-        if(!req.params.number ||( req.params.number!=10 && req.params.number!=15 && req.params.number!=5)){
-            req.params.number=5;
+        if (!req.params.number || (req.params.number != 10 && req.params.number != 15 && req.params.number != 5)) {
+            req.params.number = 5;
         }
-        console.log(req.query.cuisine);
         let ans = await axios.get(`${api_domain}/search`, {
             params: {
                 limitLicense: true,
@@ -76,27 +73,28 @@ router.get("/search/query/:query/number/:number", async (req, res, next) => {
                 cuisine: req.query.cuisine,
                 intolerances: req.query.intolerances,
                 diet: req.query.diet,
-                apiKey: process.env.spooncular_apiKey
+                apiKey: process.env.spooncular_apiKey,
+                instructionRequired :true,
             }
         });
-        if(ans.data.number==0){
-            res.status(204).send({message:"No recipes found for the search params"});
-        }else{
-        //create array recipes id
-        let data = getArrayRecipeID(ans.data);
-        let urlList = [];
-        //create url for all recipe id
-        data.map((recipeID) => urlList.push(`${api_domain}/${recipeID}/information?apiKey=${process.env.spooncular_apiKey}`));
-        //sending request to external api
-        let infoResponse = await promiseAll(axios.get, urlList);
-        //extract data to array
-        let infoResponseData=[];
-        infoResponse.map((info)=> infoResponseData.push(info.data));
-        //extract relevant informaiton for client
-        let relevantInfoResponse = getRelevantRecipeDateShow(infoResponseData);
-        //sending response
-        
-        res.status(200).send(relevantInfoResponse);
+        if (ans.data.number == 0) {
+            res.status(204).send({ message: "No recipes found for the search params" });
+        } else {
+            //create array recipes id
+            let data = getArrayRecipeID(ans.data);
+            let urlList = [];
+            //create url for all recipe id
+            data.map((recipeID) => urlList.push(`${api_domain}/${recipeID}/information?apiKey=${process.env.spooncular_apiKey}`));
+            //sending request to external api
+            let infoResponse = await promiseAll(axios.get, urlList);
+            //extract data to array
+            let infoResponseData = [];
+            infoResponse.map((info) => infoResponseData.push(info.data));
+            //extract relevant informaiton for client
+            let relevantInfoResponse = getRelevantRecipeDateShow(infoResponseData);
+            //sending response
+
+            res.status(200).send(relevantInfoResponse);
         }
     } catch (error) {
         next(error);
@@ -114,7 +112,6 @@ async function promiseAll(func, urlList) {
 
 //extract relevant recipe data from api response for show
 function getRelevantRecipeDateShow(infoList) {
-    console.log(infoList);
     return infoList.map((info) => {
         const {
             id,
@@ -152,17 +149,26 @@ function getRelevantRecipeDateInformation(info) {
         vegan,
         glutenFree,
         extendedIngredients,
-        instructions,
+        analyzedInstructions,
         servings
     } = info.data;
-    var Ingredients=[];
+    var Ingredients = [];
+    let instructions = [];
+    let steps= analyzedInstructions[0].steps;
 
-    extendedIngredients.map((ing)=>{
-        let obj={};
-        obj.name= ing.name;
-        obj.qauntity= ing.amount;
-        obj.unit=ing.unit;
+    extendedIngredients.map((ing) => {
+        let obj = {};
+        obj.name = ing.name;
+        obj.quantity = ing.amount;
+        obj.unit = ing.unit;
         Ingredients.push(obj);
+    })
+    steps.map((ins) => {
+        let obj = {}
+        obj.number = ins.number;
+        obj.step= ins.step;
+        instructions.push(obj);
+
     })
 
     return {
@@ -186,10 +192,10 @@ function getArrayRecipeID(data) {
     data.results.map((recipe) => { recipeIDs.push(recipe.id); });
     return recipeIDs;
 }
-module.exports = { 
-    router:router,
-    promiseAll:promiseAll,
-    getRelevantRecipeDateShow:getRelevantRecipeDateShow,
-    getRelevantRecipeDateInformation:getRelevantRecipeDateInformation,
-    getArrayRecipeID:getArrayRecipeID
+module.exports = {
+    router: router,
+    promiseAll: promiseAll,
+    getRelevantRecipeDateShow: getRelevantRecipeDateShow,
+    getRelevantRecipeDateInformation: getRelevantRecipeDateInformation,
+    getArrayRecipeID: getArrayRecipeID
 }
