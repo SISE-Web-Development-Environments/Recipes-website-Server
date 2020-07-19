@@ -217,7 +217,6 @@
   <li><a href="#userMyFavoriteRecipesGet"><code><span class="http-method">get</span> /user/myFavoriteRecipes</code></a></li>
   <li><a href="#userMyFavoriteRecipesPost"><code><span class="http-method">post</span> /user/myFavoriteRecipes</code></a></li>
   <li><a href="#userMyWatchPost"><code><span class="http-method">post</span> /user/myWatch</code></a></li>
-  <li><a href="#userProfilePictureUrlPut"><code><span class="http-method">put</span> /user/profilePicture/{url}</code></a></li>
   <li><a href="#userSearchRecipesGet"><code><span class="http-method">get</span> /user/search/{recipes}</code></a></li>
   <li><a href="#userUserInformationGet"><code><span class="http-method">get</span> /user/userInformation</code></a></li>
   </ul>
@@ -329,7 +328,15 @@
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "instructions" : "mix the water with the wheat",
+  "instructions" : [ {
+    "number" : 2,
+    "unit" : "gram",
+    "step" : "mix the egg"
+  }, {
+    "number" : 2,
+    "unit" : "gram",
+    "step" : "mix the egg"
+  } ],
   "isVegeterian" : true,
   "imageURL" : "https://spoonacular.com/recipeImages/12-556x370.jpg",
   "name" : "Roasted Peppers with Boquerones",
@@ -343,7 +350,6 @@
     "quantity" : 3,
     "name" : "tomato"
   } ],
-  "dishes" : 3,
   "isVegan" : false,
   "recipeID" : 12,
   "likes" : 2,
@@ -899,38 +905,6 @@
         <a href="#"></a>
   </div> <!-- method -->
   <hr/>
-  <div class="method"><a name="userProfilePictureUrlPut"></a>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="put"><code class="huge"><span class="http-method">put</span> /user/profilePicture/{url}</code></pre></div>
-    <div class="method-summary">update profile picture (<span class="nickname">userProfilePictureUrlPut</span>)</div>
-    <div class="method-notes">update profile picture</div>
-
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">url (required)</div>
-      
-            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; profile picture </div>    </div>  <!-- field-items -->
-
-
-
-
-
-
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Profile picture successfully updated
-        <a href="#"></a>
-    <h4 class="field-label">400</h4>
-    Bad request
-        <a href="#"></a>
-  </div> <!-- method -->
-  <hr/>
   <div class="method"><a name="userSearchRecipesGet"></a>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -1056,6 +1030,7 @@
     <li><a href="#recipeExtendDisplay"><code>recipeExtendDisplay</code></a></li>
     <li><a href="#recipeInformation"><code>recipeInformation</code></a></li>
     <li><a href="#recipeInformation_ingredients"><code>recipeInformation_ingredients</code></a></li>
+    <li><a href="#recipeInformation_instructions"><code>recipeInformation_instructions</code></a></li>
     <li><a href="#register"><code>register</code></a></li>
     <li><a href="#userInformation"><code>userInformation</code></a></li>
   </ol>
@@ -1207,10 +1182,7 @@
 <div class="param">isGluten </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
           <div class="param-desc"><span class="param-type">example: false</span></div>
 <div class="param">ingredients </div><div class="param-desc"><span class="param-type"><a href="#recipeInformation_ingredients">array[recipeInformation_ingredients]</a></span>  </div>
-<div class="param">instructions </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-          <div class="param-desc"><span class="param-type">example: mix the water with the wheat</span></div>
-<div class="param">dishes </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
-          <div class="param-desc"><span class="param-type">example: 3</span></div>
+<div class="param">instructions </div><div class="param-desc"><span class="param-type"><a href="#recipeInformation_instructions">array[recipeInformation_instructions]</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -1221,6 +1193,18 @@
           <div class="param-desc"><span class="param-type">example: tomato</span></div>
 <div class="param">quantity (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
           <div class="param-desc"><span class="param-type">example: 3</span></div>
+<div class="param">unit (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+          <div class="param-desc"><span class="param-type">example: gram</span></div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="recipeInformation_instructions"><code>recipeInformation_instructions</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">number (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+          <div class="param-desc"><span class="param-type">example: 2</span></div>
+<div class="param">step (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+          <div class="param-desc"><span class="param-type">example: mix the egg</span></div>
 <div class="param">unit (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
           <div class="param-desc"><span class="param-type">example: gram</span></div>
     </div>  <!-- field-items -->
