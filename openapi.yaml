@@ -345,29 +345,6 @@ paths:
                   $ref: '#/components/schemas/familyRecipe'
       security:
       - cookieAuth: []
-  /user/profilePicture/{url}:
-    put:
-      tags:
-      - user
-      summary: update profile picture
-      description: update profile picture
-      parameters:
-      - name: url
-        in: path
-        description: profile picture
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-          example: www.image.co.il/fdfdfe343dfcd
-      responses:
-        "200":
-          description: Profile picture successfully updated
-        "400":
-          description: Bad request
-      security:
-      - cookieAuth: []
   /user/userInformation:
     get:
       tags:
@@ -537,11 +514,9 @@ components:
           items:
             $ref: '#/components/schemas/recipeInformation_ingredients'
         instructions:
-          type: string
-          example: mix the water with the wheat
-        dishes:
-          type: integer
-          example: 3
+          type: array
+          items:
+            $ref: '#/components/schemas/recipeInformation_instructions'
     myRecipe:
       required:
       - cookingDuration
@@ -971,6 +946,18 @@ components:
         quantity:
           type: integer
           example: 3
+        unit:
+          type: string
+          example: gram
+    recipeInformation_instructions:
+      type: object
+      properties:
+        number:
+          type: integer
+          example: 2
+        step:
+          type: string
+          example: mix the egg
         unit:
           type: string
           example: gram
